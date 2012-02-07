@@ -171,3 +171,18 @@ whenever a property is accessed or a method is called.
         }
     });
     $object->foobar();
+
+You can create custom event listeners by implementing the `Events\EventListener` interface.
+
+    class CustomListener implements Events\EventListener {
+        public function match(Event $e) {
+            // checks if the event can be handled by this listener
+            return $e->getName() === 'foobar';
+        }
+        public function handle(Event $e) {
+            // do something with $e when match() returned true
+            echo $e->getName();
+        }
+    }
+
+    $dispatcher->addListener(new CustomListener());
