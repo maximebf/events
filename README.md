@@ -1,4 +1,3 @@
-
 # Events
 
 Events library for PHP 5.3+
@@ -69,7 +68,7 @@ car.forward (or car_forward or car-forward).
         public function onCarForward($e) {}
     }
 
-    $dispatcher->on('CarListener');
+    $dispatcher->on(new CarListener());
 
 Multiple listeners can listen to the same event. However, some of them may be more
 important than others. This can be specified using an integer as the third parameter 
