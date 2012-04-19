@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Events : Events library for PHP 5.3+" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Events</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/maximebf/events">Fork Me on GitHub</a>
+
+          <h1 id="project_title">Events</h1>
+          <h2 id="project_tagline">Events library for PHP 5.3+</h2>
+
+          <section id="downloads">
+            <a class="zip_download_link" href="https://github.com/maximebf/events/zipball/master">Download this project as a .zip file</a>
+            <a class="tar_download_link" href="https://github.com/maximebf/events/tarball/master">Download this project as a tar.gz file</a>
+          </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <p>Events provide an event dispatcher with various ways of listening to events.</p>
+
+<pre><code>$dispatcher = new Events\EventDispatcher();
+
+$dispatcher-&gt;on('car.forward', function($e) {
+    echo "The car is goind forward";
+});
+
+$dispatcher-&gt;notify(new Events\Event(null, 'car.forward'));
+</code></pre>
+
+<p>Check out <a href="https://github.com/maximebf/events/blob/master/example.php">example.php</a> for a complete example.</p>
+
+<h1>Installation</h1>
+
+<p>The easiest way to install Events is using <a href="https://github.com/composer/composer">Composer</a>
+with the following requirement:</p>
+
+<pre><code>{
+    "require": {
+        "maximebf/events": "&gt;=0.1.0"
+    }
+}
+</code></pre>
+
+<p>Alternatively, you can <a href="https://github.com/maximebf/events/zipball/master">download the archive</a> 
+and add the lib/ folder to PHP's include path:</p>
+
+<pre><code>set_include_path('/path/to/lib' . PATH_SEPARATOR . get_include_path());
+</code></pre>
+
+<p>Events does not provide an autoloader but follows the <a href="https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-0.md">PSR-0 convention</a>.<br>
+You can use the following snippet to autoload Events classes:</p>
+
+<pre><code>spl_autoload_register(function($className) {
+    if (substr($className, 0, 6) === 'Events') {
+        $filename = str_replace('\\', DIRECTORY_SEPARATOR, trim($className, '\\')) . '.php';
+        require_once $filename;
+    }
+});
+</code></pre>
+
+<h1>Listening to events</h1>
+
+<p>Events are notified through the <code>Events\EventDispatcher</code> class. The easiest way to register
+listeners to handle events is using the <code>on()</code> method:</p>
+
+<ul>
+<li>
+<code>on($event_name, $callback)</code>: listens to event with the specified name, the wildcard (<code>*</code>) character can be used</li>
+<li>
+<code>on($regexp, $callback)</code>: listens to event which name matches the regexp</li>
+<li>
+<code>on($callback)</code>: listens to all events</li>
+<li>
+<code>on($classname)</code>: listens using a class an "on" methods (see below)</li>
+</ul><p><code>$callback</code> can be any PHP callable (ie. a callback - string or array - or a closure). It will
+receive an <code>Events\Event</code> object as its only argument.</p>
+
+<pre><code>$dispatcher-&gt;on('car.forward', function($e) {});
+$dispatcher-&gt;on('car.*', function($e) {});
+$dispatcher-&gt;on('/^car\.(.+)$/', function($e) {});
+$dispatcher-&gt;on(function($e) {});
+</code></pre>
+
+<p>When using <code>on($classname)</code> the class should have methods named with the camelized event
+name prefixed witn "on". eg: the method <code>onCarForward()</code> would listen to event named
+car.forward (or car_forward or car-forward).</p>
+
+<pre><code>class CarListener {
+    public function onCarForward($e) {}
+}
+
+$dispatcher-&gt;on(new CarListener());
+</code></pre>
+
+<p>Multiple listeners can listen to the same event. However, some of them may be more
+important than others. This can be specified using an integer as the third parameter 
+to the <code>on()</code> method. The higher, the more important.</p>
+
+<pre><code>$dispatcher-&gt;on('car.forward', function($e) {}, 100);
+</code></pre>
+
+<p>Events are made of a sender, a name and some parameters.
+The event object has the following methods:</p>
+
+<ul>
+<li>
+<code>getSender()</code>: returns the object that emitted the event</li>
+<li>
+<code>getName()</code>: returns the event's name</li>
+<li>
+<code>getParam($name, $default=null)</code>: returns the $name parameter</li>
+<li><code>getParams()</code></li>
+</ul><p>For some events a return value may be needed. Listeners can specify a return value 
+using <code>setReturnValue($value)</code>.</p>
+
+<p>Some events may allow the action they represent to be cancelled. This can be perform
+using <code>cancel()</code>.</p>
+
+<p>Finally, if multiple listeners handle an event, on of them can stop the event from
+propagating to the other one using <code>stopPropagation()</code>.</p>
+
+<pre><code>$dispatcher-&gt;on('method_call', function($e) {
+    if ($e-&gt;getParam('method_name') === 'foobar') {
+        $e-&gt;cancel();
+    } else {
+        $e-&gt;setReturnValue(true);
+    }
+});
+</code></pre>
+
+<p>Under the hood, when the <code>on()</code> method is called, the event dispatcher creates a
+listener object of type <code>Events\EventListener</code>. You can create custom listener
+objects and add them using <code>addListener()</code>.</p>
+
+<h1>Dispatching events</h1>
+
+<p>Events can be dispatched using the <code>notify($event)</code> method of the event dispatcher.
+The event must be an object of type <code>Events\Event</code>.</p>
+
+<pre><code>$dispatcher-&gt;notify(new Events\Event($sender, $name, $params));
+</code></pre>
+
+<p><code>notify()</code> returns a boolean indicating if the event has been processed by one or more
+listeners.</p>
+
+<p>If you want to ensure that your event is delivered to at leadt one listener, you can
+use <code>notifyUntil($event, $callback=null)</code>. This method will try to deliver the event
+and if that fails, will try with any listeners added in the future. <code>$callback</code> will
+be called once the event has been processed.</p>
+
+<pre><code>$dispatcher-&gt;notifyUntil(new Events\Event(null, 'foo'), function() {
+    echo "Event processed!";
+});
+</code></pre>
+
+<p>To ease the process of notifying events, an <code>Events\Notifier</code> object can be used to
+create and dispatch events. Its constructor takes an event dispatcher and the sender
+object as mandatory arguments. You can optionaly provide a prefix for event names 
+and specify a different event class to use. <code>notify()</code> and <code>notifyUntil()</code> are both
+available but under a different form. Instead of taking an event object, they take
+the name of the event and optionaly and array of params.</p>
+
+<pre><code>$notifier = new Events\Notifier($eventDispatcher, $sender);
+$notifier-&gt;notify('foobar', array('param1' =&gt; 'value'));
+</code></pre>
+
+<h1>Other utilities</h1>
+
+<p>You can use <code>Events\GenericEmitter</code> to create objects which emits event and on which
+listeners can be registered.</p>
+
+<pre><code>class Car extends Events\GenericEmitter {
+    protected $eventPrefix = 'car.';
+    public function forward() {
+        $this-&gt;notify('forward');
+    }
+}
+
+$car = new Car();
+$car-&gt;on('car.forward', function($e) {});
+</code></pre>
+
+<p>Events emitter can act as relay. Thus if you have a global event dispatcher, events
+of a specific emitter could be relayed by adding the later as a listener to the former:</p>
+
+<pre><code>$car = new Car();
+$dispatcher = new Events\EventDispatcher();
+
+$car-&gt;on('car.forward', function($e) {});
+$dispatcher-&gt;on('car.forward', function($e) {});
+
+$car-&gt;addListener($dispatcher);
+</code></pre>
+
+<p>The <code>Events\EventProxy</code> class can be used as proxy to any objects and will emit events
+whenever a property is accessed or a method is called.</p>
+
+<pre><code>$object = new Events\EventProxy(new MyClass(), $dispatcher);
+$dispatcher-&gt;on('proxy.call', function($e) {
+    if ($e-&gt;getParam('method') === 'foobar') {
+        echo "Foobar was called!";
+    }
+});
+$object-&gt;foobar();
+</code></pre>
+
+<p>You can create custom event listeners by implementing the <code>Events\EventListener</code> interface.</p>
+
+<pre><code>class CustomListener implements Events\EventListener {
+    public function match(Event $e) {
+        // checks if the event can be handled by this listener
+        return $e-&gt;getName() === 'foobar';
+    }
+    public function handle(Event $e) {
+        // do something with $e when match() returned true
+        echo $e-&gt;getName();
+    }
+}
+
+$dispatcher-&gt;addListener(new CustomListener());
+</code></pre>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Events maintained by <a href="https://github.com/maximebf">maximebf</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
