@@ -15,6 +15,6 @@
         "php": ">=5.3.0"
     },
     "autoload": {
-        "psr-0": {"Events": "lib/"}
+        "psr-0": {"Events": "src/"}
     }
 }

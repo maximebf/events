@@ -19,7 +19,7 @@
 
     <filter>
         <whitelist>
-            <directory>./lib/Events/</directory>
+            <directory>./src/Events/</directory>
         </whitelist>
     </filter>
 </phpunit>
