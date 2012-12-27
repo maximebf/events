@@ -1,6 +1,5 @@
 {
     "name": "maximebf/events",
-    "version": "0.1.0",
     "description": "Events library for PHP5.3",
     "keywords": ["event", "dispatcher", "listener"],
     "homepage": "https://github.com/maximebf/events",

@@ -23,7 +23,7 @@ with the following requirement:
 
     {
         "require": {
-            "maximebf/events": ">=0.1.0"
+            "maximebf/events": ">=1.0.0"
         }
     }
 
@@ -50,7 +50,7 @@ listeners to handle events is using the `on()` method:
  - `on($event_name, $callback)`: listens to event with the specified name, the wildcard (`*`) character can be used
  - `on($regexp, $callback)`: listens to event which name matches the regexp
  - `on($callback)`: listens to all events
- - `on($classname)`: listens using a class an "on" methods (see below)
+ - `on($object)`: listens using "on" methods of an object (see below)
 
 `$callback` can be any PHP callable (ie. a callback - string or array - or a closure). It will
 receive an `Events\Event` object as its only argument.
@@ -60,7 +60,7 @@ receive an `Events\Event` object as its only argument.
     $dispatcher->on('/^car\.(.+)$/', function($e) {});
     $dispatcher->on(function($e) {});
 
-When using `on($classname)` the class should have methods named with the camelized event
+When using `on($object)` the object should have methods named with the camelized event
 name prefixed witn "on". eg: the method `onCarForward()` would listen to event named
 car.forward (or car_forward or car-forward).
 
@@ -115,7 +115,7 @@ The event must be an object of type `Events\Event`.
 `notify()` returns a boolean indicating if the event has been processed by one or more
 listeners.
 
-If you want to ensure that your event is delivered to at leadt one listener, you can
+If you want to ensure that your event is delivered to at least one listener, you can
 use `notifyUntil($event, $callback=null)`. This method will try to deliver the event
 and if that fails, will try with any listeners added in the future. `$callback` will
 be called once the event has been processed.
